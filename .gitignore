@@ -1,0 +1,69 @@
+# =========================
+# ENV / SECRETS
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# =========================
+# Docker
+# =========================
+*.log
+docker-data/
+.docker/
+docker-compose.override.yml
+docker/volumes
+
+# =========================
+# Build / Dist
+# =========================
+dist/
+build/
+
+# =========================
+# Audio / Uploads / Output
+# =========================
+uploads/
+*.wav
+*.mp3
+*.ogg
+*.m4a
+*.pdf
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# =========================
+# Playwright (если вдруг остался)
+# =========================
+playwright-report/
+test-results/

@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  api:
+    build: ./server
+    container_name: sales-api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - stt
+      - ollama
+    environment:
+      HF_TOKEN: ${HF_TOKEN}
+      STT_URL: ${STT_URL}
+      LLM_PROVIDER: ${LLM_PROVIDER}
+      OLLAMA_URL: ${OLLAMA_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+    restart: unless-stopped
+
+  stt:
+    build: ./stt
+    container_name: sales-stt
+    ports:
+      - "8001:8001"
+    environment:
+      HF_TOKEN: ${HF_TOKEN}
+    volumes:
+      - ./docker/volumes/whisper:/root/.cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sales-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./docker/volumes/ollama:/root/.ollama
+    restart: unless-stopped
