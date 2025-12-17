@@ -4,39 +4,47 @@ import { generatePdf } from "../services/pdf.service.js";
 import { segmentsToText } from "../utils/time.js";
 
 export default async function processRoute(app) {
-    app.post("/", async (req, reply) => {
-        console.log("▶ process: start");
+  app.post("/", async (req, reply) => {
+    req.log.info("process: start");
 
-        const file = await req.file();
-        console.log("▶ file received");
+    const file = await req.file();
+    if (!file) {
+      req.log.warn("audio file not provided");
+      return reply.code(400).send({ error: "audio required" });
+    }
 
-        if (!file) {
-            return reply.code(400).send({ error: "audio required" });
-        }
+    req.log.info(
+      { filename: file.filename, mimetype: file.mimetype },
+      "file received"
+    );
 
-        const buffer = await file.toBuffer();
-        console.log("▶ buffer size:", buffer.length);
+    const buffer = await file.toBuffer();
+    req.log.debug({ size: buffer.length }, "buffer created");
 
-        // 1️⃣ STT
-        console.log('transcribing...');
-        const stt = await transcribe(buffer, file.filename);
-        console.log("▶ stt done");
+    // 1️⃣ STT
+    req.log.info("transcribing audio");
+    const stt = await transcribe(buffer, file.filename);
+    req.log.info(
+      { segmentsCount: stt.segments?.length },
+      "stt completed"
+    );
 
-        // 2️⃣ Text for LLM
-        console.log('creating text for LLM...');
-        const transcript = segmentsToText(stt.segments);
+    // 2️⃣ Text for LLM
+    req.log.debug("creating text for LLM");
+    const transcript = segmentsToText(stt.segments);
 
-        // 3️⃣ Analysis
-        console.log('analyzing call...');
-        const report = await analyzeCall(transcript);
+    // 3️⃣ Analysis
+    req.log.info("analyzing call with LLM");
+    const report = await analyzeCall(transcript);
 
-        // 4️⃣ PDF
-        console.log('generating PDF...');
-        const pdf = await generatePdf(report, stt.segments);
+    // 4️⃣ PDF
+    req.log.info("generating PDF");
+    const pdf = await generatePdf(report, stt.segments);
 
-        console.log('answering with PDF file...');
-        reply
-            .header("Content-Type", "application/pdf")
-            .send(pdf);
-    });
+    req.log.info("sending PDF response");
+
+    reply
+      .header("Content-Type", "application/pdf")
+      .send(pdf);
+  });
 }
