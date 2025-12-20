@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///turbopack:///[project]/src/app/_components/visually-hidden-input/styles.module.scss"],"sourcesContent":[".visuallyHidden {\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 1px;\n    height: 1px;\n    overflow: hidden;\n    white-space: nowrap;\n    clip: rect(0 0 0 0);\n    clip-path: inset(50%);\n}"],"names":[],"mappings":"AAAA"}},
+    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["turbopack:///turbopack:///[project]/src/app/_components/prompt-editor/styles.module.scss"],"sourcesContent":[".editor {\n  max-width: 600px;\n  padding: 16px;\n  margin: 0 auto;\n}\n\n.textarea {\n  textarea {\n    font-family: monospace;\n    font-size: 14px;\n    line-height: 1.5;\n  }\n}\n\n.sendButton {\n  margin-top: 16px;\n}\n"],"names":[],"mappings":"AAAA;;;;;;AAOE;;;;;;AAOF"}}]
+}

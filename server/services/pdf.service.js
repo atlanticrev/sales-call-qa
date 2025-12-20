@@ -1,19 +1,58 @@
 import { chromium } from "playwright";
 import { renderReport } from "../templates/report.template.js";
 
-export async function generatePdf(report, segments) {
-  console.log("▶ generating PDF (starting)...");
+/**
+ * @param report
+ * @param segments
+ * @param progress ProgressReporter
+ */
+export async function generatePdf(report, segments, progress) {
+  progress.report({
+    stage: "pdf",
+    message: "Rendering HTML for PDF",
+  });
 
   const html = renderReport(report, segments);
 
+  progress.report({
+    stage: "pdf",
+    level: "debug",
+    message: "Launching Chromium",
+  });
+
   const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: "load" });
 
-  const pdf = await page.pdf({ format: "A4" });
-  await browser.close();
+  try {
+    const page = await browser.newPage();
 
-  console.log("▶ generating PDF (ending)...");
+    progress.report({
+      stage: "pdf",
+      level: "debug",
+      message: "Setting HTML content",
+    });
 
-  return pdf;
+    await page.setContent(html, { waitUntil: "load" });
+
+    progress.report({
+      stage: "pdf",
+      message: "Generating PDF document",
+    });
+
+    const pdf = await page.pdf({ format: "A4" });
+
+    progress.report({
+      stage: "pdf",
+      message: "PDF generation completed",
+    });
+
+    return pdf;
+  } finally {
+    progress.report({
+      stage: "pdf",
+      level: "debug",
+      message: "Closing Chromium",
+    });
+
+    await browser.close();
+  }
 }

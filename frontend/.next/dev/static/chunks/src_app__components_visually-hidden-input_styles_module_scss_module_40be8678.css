@@ -1,0 +1,14 @@
+/* [project]/src/app/_components/visually-hidden-input/styles.module.scss.module.css [app-client] (css) */
+.styles-module-scss-module__WrIM4a__visuallyHidden {
+  white-space: nowrap;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+/*# sourceMappingURL=src_app__components_visually-hidden-input_styles_module_scss_module_40be8678.css.map*/

@@ -1,0 +1,18 @@
+/* [project]/src/app/_components/prompt-editor/styles.scss.css [app-client] (css) */
+.editor {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.textarea textarea {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sendButton {
+  margin-top: 16px;
+}
+
+/*# sourceMappingURL=src_app__components_prompt-editor_styles_scss_02e04291.css.map*/

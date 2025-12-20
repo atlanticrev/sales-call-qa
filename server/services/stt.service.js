@@ -4,26 +4,60 @@ const STT_URL = process.env.STT_URL;
 
 const agent = new Agent({
   headersTimeout: 0,
-  bodyTimeout: 0
+  bodyTimeout: 0,
 });
 
-export async function transcribe(buffer, filename) {
-  console.log("▶ sending audio file to LLM (starting)...");
+/**
+ * @param {Buffer} buffer
+ * @param {string} filename
+ * @param {ProgressReporter} progress
+ */
+export async function transcribe(buffer, filename, progress) {
+  progress.report({
+    stage: "stt",
+    message: "Preparing audio file for transcription",
+  });
 
   const form = new FormData();
   form.append("file", new Blob([buffer]), filename);
 
+  progress.report({
+    stage: "stt",
+    level: "debug",
+    message: "Sending audio to STT service",
+    meta: { filename },
+  });
+
   const res = await fetch(STT_URL, {
     method: "POST",
     body: form,
-    dispatcher: agent
+    dispatcher: agent,
   });
 
-  console.log("▶ sending audio file to LLM (ending)...");
-
   if (!res.ok) {
+    progress.report({
+      stage: "stt",
+      level: "error",
+      message: `STT request failed with status ${res.status}`,
+    });
+
     throw new Error(`STT failed: ${res.status}`);
   }
 
-  return res.json();
+  progress.report({
+    stage: "stt",
+    message: "STT service responded, parsing result",
+  });
+
+  const result = await res.json();
+
+  progress.report({
+    stage: "stt",
+    message: "Audio transcription completed",
+    meta: {
+      segmentsCount: result?.segments?.length,
+    },
+  });
+
+  return result;
 }

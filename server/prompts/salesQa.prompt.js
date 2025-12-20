@@ -1,4 +1,4 @@
-export function salesQaPrompt(transcript) {
+export function generateDefaultPrompt(transcript) {
   return `
 Ты — руководитель отдела продаж.
 Оцени качество телефонного звонка менеджера с клиентом.

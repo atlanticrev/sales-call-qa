@@ -1,0 +1,1 @@
+export const BACKEND_URL = 'http://api:3000';

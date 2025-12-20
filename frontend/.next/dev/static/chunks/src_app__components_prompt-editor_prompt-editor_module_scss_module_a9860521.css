@@ -1,0 +1,18 @@
+/* [project]/src/app/_components/prompt-editor/prompt-editor.module.scss.module.css [app-client] (css) */
+.prompt-editor-module-scss-module__MDiH7G__editor {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.prompt-editor-module-scss-module__MDiH7G__textarea textarea {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.prompt-editor-module-scss-module__MDiH7G__sendButton {
+  margin-top: 16px;
+}
+
+/*# sourceMappingURL=src_app__components_prompt-editor_prompt-editor_module_scss_module_a9860521.css.map*/

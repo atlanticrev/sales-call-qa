@@ -1,50 +1,88 @@
-import { transcribe } from "../services/stt.service.js";
-import { analyzeCall } from "../services/llm.service.js";
-import { generatePdf } from "../services/pdf.service.js";
-import { segmentsToText } from "../utils/time.js";
+import crypto from "crypto";
+import { ProgressReporter } from "../infra/progress-reporter.ts";
+import { processStore } from "../infra/process-store.js";
+import { runProcess } from "../pipelines/run-process.js";
 
 export default async function processRoute(app) {
-  app.post("/", async (req, reply) => {
-    req.log.info("process: start");
+  app.post("/start", async (req, reply) => {
+    const jobId = crypto.randomUUID();
+
+    const progress = new ProgressReporter(req.log);
 
     const file = await req.file();
     if (!file) {
-      req.log.warn("audio file not provided");
-      return reply.code(400).send({ error: "audio required" });
+      return reply.code(400).send({ errors: { file: "audio required" } });
     }
 
-    req.log.info(
-      { filename: file.filename, mimetype: file.mimetype },
-      "file received"
-    );
+    const prompt = file.fields?.prompt?.value;
+    if (!prompt || typeof prompt !== "string") {
+      return reply.code(400).send({ errors: { prompt: "prompt required" } });
+    }
 
     const buffer = await file.toBuffer();
-    req.log.debug({ size: buffer.length }, "buffer created");
 
-    // 1️⃣ STT
-    req.log.info("transcribing audio");
-    const stt = await transcribe(buffer, file.filename);
-    req.log.info(
-      { segmentsCount: stt.segments?.length },
-      "stt completed"
-    );
+    processStore.set(jobId, {
+      progress,
+      pdf: null,
+    });
 
-    // 2️⃣ Text for LLM
-    req.log.debug("creating text for LLM");
-    const transcript = segmentsToText(stt.segments);
+    progress.report({
+      stage: "upload",
+      message: "File received",
+      meta: { filename: file.filename },
+    });
 
-    // 3️⃣ Analysis
-    req.log.info("analyzing call with LLM");
-    const report = await analyzeCall(transcript);
+    runProcess({
+      jobId,
+      buffer,
+      filename: file.filename,
+      prompt,
+      progress,
+      store: processStore,
+    });
 
-    // 4️⃣ PDF
-    req.log.info("generating PDF");
-    const pdf = await generatePdf(report, stt.segments);
+    return reply.send({ jobId });
+  });
 
-    req.log.info("sending PDF response");
+  app.get("/stream", async (req, reply) => {
+    const { jobId } = req.query;
+
+    const entry = processStore.get(jobId);
+    if (!entry) {
+      return reply.code(404).send({ error: "Job not found" });
+    }
+
+    reply.raw.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+
+    const send = (event) => {
+      reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
+    };
+
+    entry.progress.on("progress", send);
+
+    req.raw.on("close", () => {
+      entry.progress.off("progress", send);
+    });
+  });
+
+  app.get("/result", async (req, reply) => {
+    const { jobId } = req.query;
+
+    const entry = processStore.get(jobId);
+    if (!entry || !entry.pdf) {
+      return reply.code(404).send({ error: "PDF not ready" });
+    }
 
     reply
       .header("Content-Type", "application/pdf")
-      .send(pdf);
+      .header(
+        "Content-Disposition",
+        `attachment; filename="report-${jobId}.pdf"`
+      )
+      .send(entry.pdf);
   });
 }
