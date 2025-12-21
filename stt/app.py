@@ -7,11 +7,14 @@ app = FastAPI()
 
 print("🔄 Loading Whisper model...")
 model = whisper.load_model("small")
+# model = whisper.load_model("large-v3")
 print("✅ Whisper model loaded")
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+    ext = os.path.splitext(file.filename)[1] or ".mp3"
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
         tmp.write(await file.read())
         tmp_path = tmp.name
 

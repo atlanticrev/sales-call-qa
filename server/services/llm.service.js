@@ -1,5 +1,6 @@
 // import OpenAI from "openai";
 import { generateDefaultPrompt } from "../prompts/salesQa.prompt.js";
+import { generateCustomPrompt } from "../prompts/generateCustomPrompt.prompt.js";
 import { extractJson } from "../utils/json.js";
 
 const provider = process.env.LLM_PROVIDER;
@@ -121,5 +122,7 @@ async function analyzeWithOllama(prompt, progress) {
     message: "LLM analysis completed",
   });
 
-  return extractJson(data.response);
+  return data.response;
+
+  // return extractJson(data.response);
 }

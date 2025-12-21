@@ -24,7 +24,7 @@ export async function transcribe(buffer, filename, progress) {
   progress.report({
     stage: "stt",
     level: "debug",
-    message: "Sending audio to STT service",
+    message: "Transcribing audio with STT service",
     meta: { filename },
   });
 

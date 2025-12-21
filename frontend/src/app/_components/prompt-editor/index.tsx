@@ -6,6 +6,7 @@ import {
   Card,
   FormControl,
   FormHelperText,
+  LinearProgress,
   Modal,
   Stack,
   TextField,
@@ -15,13 +16,14 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 import { VisuallyHiddenInput } from '../visually-hidden-input';
 import styles from './styles.module.scss';
+import { BACKEND_URL } from '@/app/_lib/backend';
 
 type StartResponse = {
   jobId: string;
 };
 
 async function startProcess(formData: FormData): Promise<StartResponse> {
-  const res = await fetch('/api/process/start', {
+  const res = await fetch(`${BACKEND_URL}/process/start`, {
     method: 'POST',
     body: formData,
   });
@@ -59,15 +61,16 @@ export function PromptEditor() {
 
   const [isDone, setIsDone] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const formData = new FormData(formRef.current ?? undefined);
 
-    setErrors({});
-    setDetails([]);
-    setIsDone(false);
-
+    /**
+     * Client validation
+     */
     if (!formData.get('prompt')) {
       setErrors({ prompt: 'Prompt cannot be empty' });
       return;
@@ -78,39 +81,55 @@ export function PromptEditor() {
       return;
     }
 
+    /**
+     * Start process
+     */
+    setErrors({});
+    setDetails([]);
+    setIsDone(false);
+    setIsLoading(true);
+
     try {
       const { jobId } = await startProcess(formData);
 
       setJobId(jobId);
       setOpen(true);
 
-      const eventSource = new EventSource(`/api/process/stream?jobId=${jobId}`);
+      const eventSource = new EventSource(`${BACKEND_URL}/process/stream?jobId=${jobId}`);
 
-      eventSource.onmessage = (event) => {
+      eventSource.addEventListener('message', (event) => {
         const progressEvent: ProgressEvent = JSON.parse(event.data);
 
-        setStatusText(progressEvent.message);
-
-        if (progressEvent.level === 'debug') {
-          setDetails((prev) => [...prev, progressEvent.message]);
-        }
+        setStatusText(`Stage: ${progressEvent.stage}`);
 
         if (progressEvent.stage === 'done') {
           setIsDone(true);
+          setIsLoading(false);
           eventSource.close();
+          return;
         }
 
         if (progressEvent.stage === 'error') {
+          setIsLoading(false);
           eventSource.close();
+          return;
         }
-      };
 
-      eventSource.onerror = () => {
+        setDetails((prevDetails) => [...prevDetails, progressEvent.message]);
+      });
+
+      eventSource.addEventListener('error', () => {
+        setIsLoading(false);
         eventSource.close();
-      };
-    } catch (e) {
-      console.error(e);
+      });
+    } catch (error) {
+      setIsLoading(false);
+      console.error(error);
     }
+  };
+
+  const handleModalClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -154,7 +173,7 @@ export function PromptEditor() {
           helperText={errors['prompt']}
         />
 
-        <Button type="submit" variant="contained">
+        <Button type="submit" variant="contained" disabled={isLoading}>
           Send
         </Button>
       </Stack>
@@ -170,6 +189,8 @@ export function PromptEditor() {
             p: 4,
           }}
         >
+          {isLoading && <LinearProgress sx={{ mb: 1 }} />}
+
           <Typography variant="h6">{statusText || 'Starting…'}</Typography>
 
           {details.length > 0 && (
@@ -190,7 +211,9 @@ export function PromptEditor() {
             <Button
               sx={{ mt: 3 }}
               variant="contained"
-              href={`/api/process/result?jobId=${jobId}`}
+              href={`${BACKEND_URL}/process/result?jobId=${jobId}`}
+              color="success"
+              onClick={handleModalClose}
             >
               Download PDF
             </Button>

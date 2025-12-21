@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///turbopack:///[project]/src/app/_components/prompt-editor/styles.scss"],"sourcesContent":[".editor {\n  max-width: 600px;\n  padding: 16px;\n  margin: 0 auto;\n}\n\n.textarea {\n  textarea {\n    font-family: monospace;\n    font-size: 14px;\n    line-height: 1.5;\n  }\n}\n\n.sendButton {\n  margin-top: 16px;\n}\n"],"names":[],"mappings":"AAAA;;;;;;AAOE;;;;;;AAOF"}}]
-}

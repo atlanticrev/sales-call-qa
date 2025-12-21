@@ -1,31 +1,46 @@
-import { EventEmitter } from 'events';
+import { progressStore } from './progress-store.js';
 
-// export type ProgressEvent = {
-//     stage: 'upload' | 'stt' | 'llm' | 'pdf' | 'done' | 'error';
-//     level?: 'info' | 'debug' | 'warn' | 'error';
-//     message: string;
-//     meta?: Record<string, any>;
-// };
-
-export class ProgressReporter extends EventEmitter {
-    constructor(logger) {
-        super();
+export class ProgressReporter {
+    constructor(jobId, logger) {
+        this.jobId = jobId;
 
         this.logger = logger;
+
+        if (!progressStore.has(jobId)) {
+            progressStore.set(jobId, {
+                events: [],
+                listeners: new Set(),
+                pdf: null,
+            });
+        }
     }
 
     report(event) {
-        const level = event.level || 'info';
+        const entry = progressStore.get(this.jobId);
 
-        this.logger[level](
-            { stage: event.stage, meta: event.meta },
-            event.message
-        );
+        this.logger.info(event);
 
-        this.emit('progress', {
-            stage: event.stage,
-            level,
-            message: event.message,
+        entry.events.push({
+            ...event,
+            ts: Date.now(),
         });
+
+        for (const listener of entry.listeners) {
+            listener(event);
+        }
+    }
+
+    subscribe(listener) {
+        const entry = progressStore.get(this.jobId);
+
+        for (const event of entry.events) {
+            listener(event);
+        }
+
+        entry.listeners.add(listener);
+
+        return () => {
+            entry.listeners.delete(listener);
+        };
     }
 }

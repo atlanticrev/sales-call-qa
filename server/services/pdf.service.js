@@ -12,7 +12,9 @@ export async function generatePdf(report, segments, progress) {
     message: "Rendering HTML for PDF",
   });
 
-  const html = renderReport(report, segments);
+  // const html = renderReport(report, segments);
+
+  const html = report;
 
   progress.report({
     stage: "pdf",

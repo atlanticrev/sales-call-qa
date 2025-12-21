@@ -11,7 +11,7 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-    
+
   api:
     build: ./server
     container_name: sales-api
@@ -32,6 +32,7 @@ services:
 
   stt:
     build: ./stt
+    mem_limit: 4g
     container_name: sales-stt
     ports:
       - "8001:8001"
@@ -41,7 +42,7 @@ services:
       - ./docker/volumes/whisper:/root/.cache
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/docs" ]
       interval: 10s
       timeout: 5s
       retries: 30
